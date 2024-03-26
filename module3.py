@@ -1,8 +1,9 @@
-from pydoc import visiblename
 import pygame
+from Character_Object import miner
 
 pygame.init()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+time = 0
 
 class building(pygame.sprite.Sprite):
     def __init__(self, type, x, y):
@@ -14,34 +15,23 @@ class building(pygame.sprite.Sprite):
             self.image = pygame.image.load("Textures/Menu/Vault_Building.png").convert_alpha()
             self.rect = self.image.get_rect(center = (x, y))
 
-class player(pygame.sprite.Sprite): #Creates a movable player
-    def __init__(self, x, y, velocity): #Initializes the player
+class invisWall(pygame.sprite.Sprite): #Creates an invisible Wall, this prevents the player from leaving the screen and forces them into the playing area
+    def __init__(self, start, visible, stretch):
         super().__init__()
-        self.velocity = velocity
-        self.image = pygame.Surface((20, 20))
-        self.image.fill((255, 200, 200))
-        self.rect = self.image.get_rect(center = (x, y))
-
-    def update(self, dx, dy): #Allows the player to move
-        self.rect.x += dx * self.velocity
-        self.rect.y -= dy * self.velocity
-
-class invisWall(pygame.sprite.Sprite):
-    def __init__(self, x, y, visible, xStretch, yStretch):
-        super().__init__()
-        self.id = (x, y)
-        self.image = pygame.Surface((xStretch, yStretch))
         if visible:
+            self.image = pygame.Surface(stretch)
             self.image.fill((255, 0, 0))
-        self.rect = self.image.get_rect(center = (x, y))
+        else:
+            self.image = pygame.Surface(stretch, pygame.SRCALPHA)
+        self.rect = self.image.get_rect(topleft = start)
 
 settingBlock = building(0, 300, 540)
 vaultBlock = building(1, 1620, 540)
-playerA = player(960, 540, 10)
+playerA = miner(960, 540, 5)
 invisWallGroup = pygame.sprite.Group()
-blocks = [[320, 540, 1, 20, 100]]
-for x, y, visible, xStretch, yStretch in blocks:
-    invisWallGroup.add(invisWall(x, y, visible, xStretch, yStretch))
+blocks = [[(0, 470), 0, (600, 10)], [(600, 780), 0, (260, 10)], [(600, 470), 0, (10, 310)], [(850, 0), 0, (10, 780)], [(1320, 470), 0, (600, 10)], [(1310, 470), 0, (10, 310)], [(1060, 0), 0, (10, 780)], [(1070, 770), 0, (240, 10)]]
+for pos1, visible, pos2 in blocks:
+    invisWallGroup.add(invisWall(pos1, visible, pos2))
 
 while True:
     screen.fill((50, 50, 50))
@@ -49,30 +39,32 @@ while True:
     keys = pygame.key.get_pressed() #Checks which keys are pressed and moves accordingly
 
     if keys[pygame.K_w]:
-        playerA.update(0, 1)
+        playerA.update(0, 1, time, 1)
         if pygame.sprite.spritecollide(playerA, invisWallGroup, False):
-            playerA.update(0, -1)
+            playerA.update(0, -1, time, 0)
     if keys[pygame.K_s]:
-        playerA.update(0, -1)
+        playerA.update(0, -1, time, 1)
         if pygame.sprite.spritecollide(playerA, invisWallGroup, False):
-            playerA.update(0, 1)
+            playerA.update(0, 1, time, 0)
     if keys[pygame.K_a]:
-        playerA.update(-1, 0)
+        playerA.update(-1, 0, time, 1)
         if pygame.sprite.spritecollide(playerA, invisWallGroup, False):
-            playerA.update(1, 0)
+            playerA.update(1, 0, time, 0)
     if keys[pygame.K_d]:
-        playerA.update(1, 0)
+        playerA.update(1, 0, time, 1)
         if pygame.sprite.spritecollide(playerA, invisWallGroup, False):
-            playerA.update(-1, 0)
+            playerA.update(-1, 0, time, 0)
 
-    pygame.draw.rect(screen, (25, 25, 25), ((0, 540), (600, 1080))) #Places the buildings and player on the screen
-    pygame.draw.rect(screen, (25, 25, 25), ((0, 880), (800, 1080)))
-    pygame.draw.rect(screen, (25, 25, 25), ((1320, 540), (1920, 1080)))
-    pygame.draw.rect(screen, (25, 25, 25), ((1120, 880), (1920, 1080)))
+    pygame.draw.rect(screen, (35, 35, 35), ((860, 0), (200, 1080))) #Middle Path
+    pygame.draw.rect(screen, (25, 25, 25), ((0, 480), (600, 600))) #Left Platform
+    pygame.draw.rect(screen, (25, 25, 25), ((1320, 480), (600, 600))) #Right Platform
+    pygame.draw.rect(screen, (25, 25, 25), ((600, 780), (260, 300))) #Left Connector
+    pygame.draw.rect(screen, (25, 25, 25), ((1060, 780), (260, 300))) #Right Connector
+
+    invisWallGroup.draw(screen)
     screen.blit(playerA.image, playerA.rect)
     screen.blit(settingBlock.image, settingBlock.rect)
     screen.blit(vaultBlock.image, vaultBlock.rect)
-    invisWallGroup.draw(screen)
 
     pygame.display.flip() #Updates and controls the game
 
@@ -80,6 +72,8 @@ while True:
         if event.type == pygame.QUIT:
             exit()
 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            print(pygame.mouse.get_pos())
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_KP_ENTER:
                 exit()
@@ -87,3 +81,6 @@ while True:
             if event.key == pygame.K_KP_PLUS:
                 pygame.image.save(screen, "menuPage.png")
     pygame.time.Clock().tick(60)
+    time += 1
+    if time == 60:
+        time = 0
