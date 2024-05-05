@@ -1,5 +1,6 @@
 import pygame
-from math import atan2, degrees
+from math import atan2, degrees, cos, sin
+from random import randint
 
 class miner(pygame.sprite.Sprite): #Creates a movable player
     def __init__(self, x, y, velocity, size): #Initializes the player
@@ -48,15 +49,46 @@ class miner(pygame.sprite.Sprite): #Creates a movable player
 
 class Drill(pygame.sprite.Sprite):
   def __init__(self, x, y):
-    self.originalImage = pygame.image.load("Textures/Characters/Miner/Drill_1.png").convert_alpha() #Create an image to rotate from
+    super().__init__()
+    self.images = ["Textures/Characters/Miner/Drill_1.png", "Textures/Characters/Miner/Drill_2.png", "Textures/Characters/Miner/Drill_3.png"]
+    self.pointer = 0
+    self.originalImage = pygame.image.load(self.images[self.pointer]).convert_alpha() #Create an image to rotate from
     self.image = self.originalImage #General initializing stuff
     self.pos = (x, y)
     self.rect = self.image.get_rect(center = self.pos)
+    self.angle = 0
+    self.flip = True
 
-  def update(self, targetPos):
+  def update(self, targetPos, time):
+    if time % 12 == 0:
+        self.pointer = (self.pointer + 1) % 3
+        self.originalImage = pygame.image.load(self.images[self.pointer]).convert_alpha()
+
     xDist = targetPos[0] - self.rect.x #Calculate difference in x
     yDist = -(targetPos[1] - self.rect.y) #Calculate difference in y
-    angle = degrees(atan2(yDist, xDist)) #Calculate angle between targetPos and drill
+    angle = atan2(yDist, xDist) #Calculate angle between targetPos and drill
 
-    self.image = pygame.transform.rotate(self.originalImage, angle - 180) #Rotates around the center
-    self.rect = self.image.get_rect(center = self.pos)
+    self.image = pygame.transform.rotate(self.originalImage, degrees(angle) - 180) #Rotates around the center
+    self.rect = self.image.get_rect(center = (self.pos[0] + (80 * sin(angle)), self.pos[1] + (80 * cos(angle))))
+
+class slime(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = [f"Textures\Enemies\Slime\slime_{num + 1}.png" for num in range(5)]
+        self.pointer = 0
+        self.pos = (x, y)
+        self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
+        self.rect = self.image.get_rect(center = self.pos)
+        self.targetX = randint(200, 1720)
+        self.targetY = randint(200, 880)
+
+    def update(self, time):
+        if self.rect.x - self.targetX and self.rect.y - self.targetY:            
+            if time % 5 == 0:
+                self.pointer = (self.pointer + 1) % 5
+                self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
+            self.rect.x += (((self.rect.x < self.targetX) * 2) - 1) * min(5, abs(self.rect.x - self.targetX))
+            self.rect.y += (((self.rect.y < self.targetY) * 2) - 1) * min(5, abs(self.rect.y - self.targetY))
+        else:
+            self.targetX = randint(200, 1720)
+            self.targetY = randint(200, 880)

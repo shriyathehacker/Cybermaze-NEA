@@ -1,5 +1,5 @@
 import pygame
-from Character_Object import miner, Drill
+from Character_Object import miner, Drill, slime
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -88,6 +88,7 @@ for row in range(len(tileMap)):
 player = miner(960, 540, 10, 2)
 healthBar = health(player.health, 150, 150)
 drill = Drill(960, 540)
+slimeAlpha = slime(500, 500)
 healthBarGroup = pygame.sprite.GroupSingle(healthBar)
 
 while True:
@@ -127,11 +128,13 @@ while True:
 
     player.animation(vector[0], vector[1], time, 1)
     healthBarGroup.update()
-    drill.update(pygame.mouse.get_pos())
+    slimeAlpha.update(time)
+    drill.update(pygame.mouse.get_pos(), time)
 
     allTilesGroup.draw(screen)
     screen.blit(player.image, player.rect)
     screen.blit(drill.image, drill.rect)
+    screen.blit(slimeAlpha.image, slimeAlpha.rect)
     healthBarGroup.draw(screen)
 
     for event in pygame.event.get():
