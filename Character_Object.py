@@ -17,6 +17,8 @@ class miner(pygame.sprite.Sprite): #Creates a movable player
         self.rect = self.image.get_rect(center = (x, y))
         self.mask = pygame.mask.from_surface(self.image)
         self.health = 3
+        self.immunity = False
+        self.timeStamp = 61
 
     def update(self, dx, dy): #Allows the player to move
         self.rect.x += dx * self.velocity
@@ -39,6 +41,8 @@ class miner(pygame.sprite.Sprite): #Creates a movable player
         self.image = pygame.transform.scale(self.image, (60 * self.size, 60 * self.size))
         self.mask = pygame.mask.from_surface(self.image)
 
+        return self.facingDirection
+
     def collide(self):
         if self.facingDirection:
             self.rect.x += self.velocity
@@ -47,17 +51,28 @@ class miner(pygame.sprite.Sprite): #Creates a movable player
             self.rect.x -= self.velocity
             self.rect.y += 1
 
+    def immune(self, flag, time):
+        if flag:
+            self.timeStamp = time
+            self.immunity = True
+        else:
+            if time == self.timeStamp:
+                self.immunity = False
+                self.timeStamp = 61
+
 class Drill(pygame.sprite.Sprite):
   def __init__(self, x, y):
     super().__init__()
-    self.images = ["Textures/Characters/Miner/Drill_1.png", "Textures/Characters/Miner/Drill_2.png", "Textures/Characters/Miner/Drill_3.png"]
+    self.images = ["Textures/Characters/Miner/Drill_1.png", "Textures/Characters/Miner/Drill_2.png", "Textures/Characters/Miner/Drill_3.png"] #All Frames of the animation
     self.pointer = 0
     self.originalImage = pygame.image.load(self.images[self.pointer]).convert_alpha() #Create an image to rotate from
     self.image = self.originalImage #General initializing stuff
     self.pos = (x, y)
     self.rect = self.image.get_rect(center = self.pos)
     self.angle = 0
+    self.mask = pygame.mask.from_surface(self.image)
     self.flip = True
+    self.originalAngle = 0
 
   def update(self, targetPos, time):
     if time % 12 == 0:
@@ -68,8 +83,10 @@ class Drill(pygame.sprite.Sprite):
     yDist = -(targetPos[1] - self.rect.y) #Calculate difference in y
     angle = atan2(yDist, xDist) #Calculate angle between targetPos and drill
 
-    self.image = pygame.transform.rotate(self.originalImage, degrees(angle) - 180) #Rotates around the center
-    self.rect = self.image.get_rect(center = (self.pos[0] + (80 * sin(angle)), self.pos[1] + (80 * cos(angle))))
+    self.image = pygame.transform.rotate(self.originalImage, degrees(angle) + 180) #Rotates around the center
+    self.rect = self.image.get_rect(center = (self.pos[0] + (100 * (sin(angle - 180))), self.pos[1] + (100 * (cos(angle - 180)))))
+    self.mask = pygame.mask.from_surface(self.image)
+    self.originalAngle = angle
 
 class slime(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -78,9 +95,10 @@ class slime(pygame.sprite.Sprite):
         self.pointer = 0
         self.pos = (x, y)
         self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(center = self.pos)
-        self.targetX = randint(200, 1720)
-        self.targetY = randint(200, 880)
+        self.targetX = 960
+        self.targetY = 540
 
     def update(self, time):
         if self.rect.x - self.targetX and self.rect.y - self.targetY:            
