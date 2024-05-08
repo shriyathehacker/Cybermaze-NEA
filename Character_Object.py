@@ -96,17 +96,12 @@ class slime(pygame.sprite.Sprite):
         self.pos = (x, y)
         self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect = self.image.get_rect(center = self.pos)
+        self.rect = self.image.get_rect(center = (x + 100, y + 100))
         self.targetX = 960
         self.targetY = 540
 
-    def update(self, time):
-        if self.rect.x - self.targetX and self.rect.y - self.targetY:            
-            if time % 5 == 0:
-                self.pointer = (self.pointer + 1) % 5
-                self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
-            self.rect.x += (((self.rect.x < self.targetX) * 2) - 1) * min(5, abs(self.rect.x - self.targetX))
-            self.rect.y += (((self.rect.y < self.targetY) * 2) - 1) * min(5, abs(self.rect.y - self.targetY))
-        else:
-            self.targetX = randint(200, 1720)
-            self.targetY = randint(200, 880)
+    def update(self, dx, dy):
+        self.rect.x -= dx * 10
+        self.rect.y += dy * 10 #Slime
+
+    def animation(self, dx, dy):

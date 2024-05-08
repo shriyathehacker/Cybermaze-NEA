@@ -1,6 +1,6 @@
 import pygame
 from Character_Object import miner, Drill, slime
-from random import randint
+from random import randint, choice
 
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -12,6 +12,7 @@ def placeTile(x, y):
 class Tile(pygame.sprite.Sprite):
     def __init__(self, x, y, playerPos):
         super().__init__()
+        self.id = (x, y)
         self.image = pygame.Surface((200, 200))     
         self.rect = self.image.get_rect(center = placeTile(x - playerPos[0], y - playerPos[1]))
         self.mask = pygame.mask.from_surface(self.image)
@@ -51,6 +52,7 @@ class health(pygame.sprite.Sprite):
 
 wallGroup = pygame.sprite.Group()
 allTilesGroup = pygame.sprite.Group()
+pathGroup = pygame.sprite.Group()
 
 tileMap = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -76,6 +78,8 @@ tileMap = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
+possibleSpawnLocations = []
+
 for row in range(len(tileMap)):
     for colum in range(len(tileMap[row])):
         if tileMap[row][colum] == 2:
@@ -88,14 +92,23 @@ for row in range(len(tileMap)):
             wallGroup.add(wall)
             allTilesGroup.add(wall)
         else:
-            allTilesGroup.add(Path(column, row, playerTile))
+            path = Path(column, row, playerTile)
+            allTilesGroup.add(path)
+            pathGroup.add(path)
+            possibleSpawnLocations.append((column, row))
 
 player = miner(960, 540, 10, 2)
 healthBar = health(player.health, 150, 150)
 drill = Drill(960, 540)
-slimeAlpha = slime(500, 500)
+spawnPos = (1,1)
+for path in pathGroup:
+    if spawnPos == path.id:
+        relativeSpawnPos = (path.rect.x, path.rect.y)
+        break
+slimeAlpha = slime(*relativeSpawnPos)
 healthBarGroup = pygame.sprite.GroupSingle(healthBar)
 slimeGroup = pygame.sprite.GroupSingle(slimeAlpha)
+allTilesGroup.add(slimeAlpha)
 
 while True:
     screen.fill((0, 0, 0))
@@ -144,7 +157,6 @@ while True:
             allTilesGroup.update(-1,0)
 
     healthBarGroup.update() #Update everything
-    slimeAlpha.update(time)
     drill.update(pygame.mouse.get_pos(), time)
     allTilesGroup.draw(screen)
     player.immune(0, time)
@@ -153,20 +165,20 @@ while True:
     screen.blit(slimeAlpha.image, slimeAlpha.rect)
     healthBarGroup.draw(screen)
 
-    if pygame.sprite.spritecollide(drill, slimeGroup, True, pygame.sprite.collide_mask):
+    if pygame.sprite.spritecollide(drill, slimeGroup, True, pygame.sprite.collide_mask): #If slime collides with the drill it dies
         del slimeAlpha
-        slimeAlpha = slime(randint(0, 1920), randint(0, 1080))
+        spawnPos = choice(possibleSpawnLocations)
+        slimeAlpha = slime(*spawnPos, player.rect.x, player.rect.y)
         slimeGroup = pygame.sprite.GroupSingle(slimeAlpha)
+        allTilesGroup.add(slimeAlpha)
 
-    if pygame.sprite.spritecollide(player, slimeGroup, False, pygame.sprite.collide_mask) and not(player.immunity):
+    if pygame.sprite.spritecollide(player, slimeGroup, False, pygame.sprite.collide_mask) and not(player.immunity): #If slime collides with player, player takes damage
         healthBar.health -= 1
         player.immune(1, time)
         if healthBar.health == 0:
             pygame.quit()
             exit()
 
-    if not(vector[0]) or not(vector[1]):
-        previousVector = vector
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
