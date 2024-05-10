@@ -41,7 +41,7 @@ class miner(pygame.sprite.Sprite): #Creates a movable player
         self.image = pygame.transform.scale(self.image, (60 * self.size, 60 * self.size))
         self.mask = pygame.mask.from_surface(self.image)
 
-        return self.facingDirection
+        return self.facingDirection, not(self.currentAnimation)
 
     def collide(self):
         if self.facingDirection:
