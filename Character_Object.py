@@ -97,6 +97,7 @@ class slime(pygame.sprite.Sprite):
         self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(center = (x + 100, y + 100))
+        self.reverse = False
         self.targetX = 960
         self.targetY = 540
 
@@ -104,4 +105,18 @@ class slime(pygame.sprite.Sprite):
         self.rect.x -= dx * 10
         self.rect.y += dy * 10 #Slime
 
-    def animation(self, dx, dy):
+    def animate(self, time):
+        if time % 5 == 0:
+            if self.reverse:
+                self.pointer = self.pointer - 1
+                if self.pointer == 0:
+                    self.reverse = False
+            else:
+                self.pointer = self.pointer + 1
+                if self.pointer == 4:
+                    self.reverse = True
+
+            self.image = pygame.image.load(self.images[self.pointer]).convert_alpha()
+
+    def move(self):
+        pass
